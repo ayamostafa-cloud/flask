@@ -1,146 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>NYC Collisions Dashboard</title>
-  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    h1, h3 {
-      text-align: center;
-    }
-    .controls {
-      width: 80%;
-      margin: auto;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      text-align: center;
-    }
-    .controls label {
-      font-weight: bold;
-    }
-    .charts {
-      width: 95%;
-      margin: auto;
-    }
-    .chart {
-      margin-top: 30px;
-    }
-    button {
-      padding: 8px 12px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>NYC Crash Dashboard</title>
+
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background: #f7f7f7;
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+        }
+
+        .filter-box {
+            width: 90%;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        select, input {
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 12px;
+            grid-column: span 4;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .chart-box {
+            width: 95%;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+    </style>
+
 </head>
 <body>
-  <h1>NYC Motor Vehicle Collisions Dashboard</h1>
 
-  <div class="controls">
-    <div>
-      <label for="borough-select">Select Borough:</label><br>
-      <select id="borough-select">
-        <option value="">Choose Borough</option>
-        {% for b in boroughs %}
-        <option value="{{ b }}">{{ b }}</option>
-        {% endfor %}
-      </select>
+<h1>NYC Crash Interactive Dashboard</h1>
+
+<form method="POST">
+    <div class="filter-box">
+
+        <!-- BOROUGH -->
+        <div>
+            <label>Borough</label>
+            <select name="borough">
+                <option>All</option>
+                {% for b in boroughs %}
+                <option value="{{b}}" {% if selected_borough == b %}selected{% endif %}>{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- YEAR -->
+        <div>
+            <label>Year</label>
+            <select name="year">
+                <option>All</option>
+                {% for y in years %}
+                <option value="{{y}}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- SEARCH -->
+        <div>
+            <label>Search Mode</label>
+            <input type="text" name="search" placeholder="e.g. Brooklyn 2020 pedestrian">
+        </div>
+
+        <!-- BUTTON -->
+        <button type="submit">Generate Report</button>
+
     </div>
+</form>
 
-    <div>
-      <label for="year-select">Select Year:</label><br>
-      <select id="year-select">
-        <option value="">Choose Year</option>
-        {% for y in years %}
-        <option value="{{ y }}">{{ y }}</option>
-        {% endfor %}
-      </select>
-    </div>
+<!-- ===================== -->
+<!-- CHARTS SECTION -->
+<!-- ===================== -->
 
-    <div>
-      <label for="search-box">Search (e.g. Brooklyn 2020 pedestrian):</label><br>
-      <input id="search-box" type="text" placeholder="Enter search term..." style="width: 100%;">
-    </div>
+<div class="chart-box">
+    <h2>Top Vehicle Types</h2>
+    <div id="bar"></div>
+</div>
 
-    <div style="display:flex; align-items:flex-end; justify-content:center;">
-      <button id="generate-btn">Generate Report</button>
-    </div>
-  </div>
+<div class="chart-box">
+    <h2>Injuries vs Fatalities</h2>
+    <div id="pie"></div>
+</div>
 
-  <div class="charts">
-    <div class="chart">
-      <h3>Top Vehicle Types Involved</h3>
-      <div id="bar-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Crash Locations</h2>
+    <div id="map"></div>
+</div>
 
-    <div class="chart">
-      <h3>Injuries vs Fatalities</h3>
-      <div id="pie-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Crashes Per Year</h2>
+    <div id="line"></div>
+</div>
 
-    <div class="chart">
-      <h3>Crash Locations by Borough</h3>
-      <div id="map-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Injuries by Borough × Year</h2>
+    <div id="heat"></div>
+</div>
 
-    <div class="chart">
-      <h3>Crashes Over the Years</h3>
-      <div id="line-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Distribution of Injuries</h2>
+    <div id="hist"></div>
+</div>
 
-    <div class="chart">
-      <h3>Heatmap: Injuries by Borough &amp; Year</h3>
-      <div id="heatmap-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Scatter: Injuries vs Fatalities</h2>
+    <div id="scatter"></div>
+</div>
 
-    <div class="chart">
-      <h3>Injury Count Distribution</h3>
-      <div id="hist-chart"></div>
-    </div>
+<div class="chart-box">
+    <h2>Sunburst: Borough → Vehicle Type → Injuries</h2>
+    <div id="sunburst"></div>
+</div>
 
-    <div class="chart">
-      <h3>Scatter Plot: Injuries vs Fatalities</h3>
-      <div id="scatter-chart"></div>
-    </div>
+<!-- ===================== -->
+<!-- PLOTLY JS RENDERING -->
+<!-- ===================== -->
 
-    <div class="chart">
-      <h3>Sunburst: Borough → Vehicle Type → Injuries</h3>
-      <div id="sunburst-chart"></div>
-    </div>
-  </div>
+<script>
+    var bar_fig = {{ bar | safe }};
+    Plotly.newPlot("bar", bar_fig.data, bar_fig.layout);
 
-  <script>
-    async function generateReport() {
-      const borough = document.getElementById("borough-select").value || null;
-      const year = document.getElementById("year-select").value || null;
-      const search = document.getElementById("search-box").value || null;
+    var pie_fig = {{ pie | safe }};
+    Plotly.newPlot("pie", pie_fig.data, pie_fig.layout);
 
-      const payload = { borough, year, search };
+    var map_fig = {{ map | safe }};
+    Plotly.newPlot("map", map_fig.data, map_fig.layout);
 
-      const response = await fetch("/api/charts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+    var line_fig = {{ line | safe }};
+    Plotly.newPlot("line", line_fig.data, line_fig.layout);
 
-      const figs = await response.json();
+    var heat_fig = {{ heat | safe }};
+    Plotly.newPlot("heat", heat_fig.data, heat_fig.layout);
 
-      Plotly.newPlot('bar-chart', figs.bar.data, figs.bar.layout);
-      Plotly.newPlot('pie-chart', figs.pie.data, figs.pie.layout);
-      Plotly.newPlot('map-chart', figs.map.data, figs.map.layout);
-      Plotly.newPlot('line-chart', figs.line.data, figs.line.layout);
-      Plotly.newPlot('heatmap-chart', figs.heat.data, figs.heat.layout);
-      Plotly.newPlot('hist-chart', figs.hist.data, figs.hist.layout);
-      Plotly.newPlot('scatter-chart', figs.scatter.data, figs.scatter.layout);
-      Plotly.newPlot('sunburst-chart', figs.sunburst.data, figs.sunburst.layout);
-    }
+    var hist_fig = {{ hist | safe }};
+    Plotly.newPlot("hist", hist_fig.data, hist_fig.layout);
 
-    document.getElementById("generate-btn").addEventListener("click", generateReport);
-  </script>
+    var scatter_fig = {{ scatter | safe }};
+    Plotly.newPlot("scatter", scatter_fig.data, scatter_fig.layout);
+
+    var sun_fig = {{ sunburst | safe }};
+    Plotly.newPlot("sunburst", sun_fig.data, sun_fig.layout);
+</script>
+
 </body>
 </html>
